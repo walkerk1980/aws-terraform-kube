@@ -109,11 +109,12 @@ resource "aws_security_group" "worker" {
 resource "aws_instance" "master" {
     ami = "ami-005bdb005fb00e791"
     instance_type = "t2.micro"
+    count = "${var.master_node_count}"
 
     key_name = "${var.aws_ec2_keypair}"
     vpc_security_group_ids = ["${aws_security_group.master.id}"]
 
-    private_ip = "192.168.0.100"
+    private_ip = "${element(var.master_ips, count.index)}"
 
     subnet_id = "${aws_subnet.public.id}"
     
@@ -131,27 +132,27 @@ resource "aws_instance" "master" {
 # Assign Elastic IP to Instance "master"
 resource "aws_eip" "kube_eip" {
   vpc = true
-
-  instance                  = "${aws_instance.master.id}"
-  associate_with_private_ip = "192.168.0.100"
+  count = "${var.master_node_count}"
+  instance                  = "${element(aws_instance.master.*.id, count.index)}"
+  associate_with_private_ip = "${element(var.master_ips, count.index)}"
   depends_on                = ["aws_internet_gateway.internet-gateway"]
 }
 
 
-# worker node 1
-resource "aws_instance" "worker1" {
+# worker nodes
+resource "aws_instance" "worker" {
     ami = "ami-005bdb005fb00e791"
     instance_type = "t2.micro"
-
+    count = "${var.worker_node_count}"
     key_name = "${var.aws_ec2_keypair}"
     vpc_security_group_ids = ["${aws_security_group.worker.id}"]
 
-    private_ip = "192.168.0.101"
+    private_ip = "${element(var.worker_ips, count.index)}"
 
     subnet_id = "${aws_subnet.public.id}"
     
     tags = {
-        Name = "KubeWorker1"
+        Name = "KubeWorker${count.index}"
     }
 
     # The connection block tells our provisioner how to
@@ -161,26 +162,18 @@ resource "aws_instance" "worker1" {
     }
 }
 
-# worker node 2
-resource "aws_instance" "worker2" {
-    ami = "ami-005bdb005fb00e791"
-    instance_type = "t2.micro"
-
-    key_name = "${var.aws_ec2_keypair}"
-    vpc_security_group_ids = ["${aws_security_group.worker.id}"]
-
-    private_ip = "192.168.0.102"
-
-    subnet_id = "${aws_subnet.public.id}"
-    
-    tags = {
-        Name = "KubeWorker2"
-    }
-
-    # The connection block tells our provisioner how to
-    # communicate with the instance
-    connection {
-        user = "ubuntu"
-    }
+output "VPC" {
+    value = "${aws_vpc.vpc1.id}"
 }
-
+output "Master Nodes" {
+    value = ["${aws_eip.kube_eip.*.instance}"]
+}
+output "Master Node IPs" {
+    value = ["${aws_eip.kube_eip.*.public_ip}"]
+}
+output "Worker nodes" {
+    value = ["${aws_instance.worker.*.id}"]
+}
+output "Worker IPs" {
+    value = ["${aws_instance.worker.*.private_ip}"]
+}

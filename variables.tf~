@@ -1,0 +1,6 @@
+variable "aws_region" {default = "us-west-2"}
+variable "aws_profile" {default = "default"}
+variable "aws_ec2_keypair" {default = "keith1"}
+variable "master_ips" {default = [ "192.168.0.100", "192.168.0.101 ]}
+variable "worker_ip_start" {default = "192.168.0.101"}
+variable "aws_orgs_role_name" {default = "OrganizationAccountAccessRole"}
