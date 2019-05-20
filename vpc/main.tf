@@ -28,6 +28,7 @@ resource "aws_vpc" "vpc1" {
 
 # Subnet in in AZ1
 resource "aws_subnet" "subnet0" {
+  depends_on = ["aws_route_table.public"]
   vpc_id = "${aws_vpc.vpc1.id}"
   cidr_block = "192.168.0.0/24"
   map_public_ip_on_launch = true
@@ -40,6 +41,7 @@ resource "aws_subnet" "subnet0" {
 
 # Subnet in in AZ2
 resource "aws_subnet" "subnet1" {
+  depends_on = ["aws_route_table.public"]
   vpc_id = "${aws_vpc.vpc1.id}"
   cidr_block = "192.168.1.0/24"
   map_public_ip_on_launch = true

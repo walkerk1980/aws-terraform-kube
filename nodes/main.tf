@@ -28,7 +28,6 @@ resource "aws_eip" "kube_eip" {
   count = "${var.master_node_count}"
   instance                  = "${element(aws_instance.master.*.id, count.index)}"
   associate_with_private_ip = "${element(var.master_ips, count.index)}"
-  #depends_on                = ["vpc.internet-gateway"]
 }
 
 
